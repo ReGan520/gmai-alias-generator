@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail 无限别名生成器 | Gmail Alias Generator</title>
+    <!-- 引入 Google Fonts & FontAwesome 图标库 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           1. CSS 变量与主题定义 (UI UX Pro Max)
+           ========================================== */
+        :root[data-theme="dark"] {
+            --bg-body: #090d16;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #171232 0%, #090d16 100%);
+            --card-bg: rgba(22, 28, 45, 0.7);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --card-border-hover: rgba(139, 92, 246, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --input-bg: rgba(13, 17, 28, 0.8);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-focus-border: #a855f7;
+            --input-focus-shadow: rgba(168, 85, 247, 0.25);
+            --accent-color: #a855f7;
+            --accent-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            --accent-gradient-hover: linear-gradient(135deg, #b55fe6 0%, #f45ca8 100%);
+            --toast-bg: rgba(15, 23, 42, 0.95);
+            --warning-bg: rgba(234, 179, 8, 0.15);
+            --warning-border: rgba(234, 179, 8, 0.3);
+            --warning-text: #fef08a;
+            --success-color: #10b981;
+            --orb-1-color: #a855f7;
+            --orb-2-color: #ec4899;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+            --scrollbar-hover: rgba(255, 255, 255, 0.25);
+        }
+
+        :root[data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #e0e7ff 0%, #f8fafc 100%);
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(15, 23, 42, 0.06);
+            --card-border-hover: rgba(99, 102, 241, 0.3);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(241, 245, 249, 0.9);
+            --input-border: rgba(15, 23, 42, 0.1);
+            --input-focus-border: #6366f1;
+            --input-focus-shadow: rgba(99, 102, 241, 0.25);
+            --accent-color: #6366f1;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            --accent-gradient-hover: linear-gradient(135deg, #4f46e5 0%, #db2777 100%);
+            --toast-bg: rgba(255, 255, 255, 0.95);
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --warning-border: rgba(245, 158, 11, 0.25);
+            --warning-text: #b45309;
+            --success-color: #10b981;
+            --orb-1-color: #c7d2fe;
+            --orb-2-color: #fbcfe8;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+            --scrollbar-hover: rgba(0, 0, 0, 0.25);
+        }
+
+        /* ==========================================
+           2. 基础复位与全局样式
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-body);
+            background-image: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 背景流光光晕 */
+        .orb {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.12;
+            pointer-events: none;
+            transition: background-color 0.8s ease;
+        }
+        .orb-1 {
+            top: -100px;
+            left: 10%;
+            background-color: var(--orb-1-color);
+            animation: float-1 25s infinite alternate ease-in-out;
+        }
+        .orb-2 {
+            top: 200px;
+            right: 10%;
+            background-color: var(--orb-2-color);
+            animation: float-2 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float-1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+        @keyframes float-2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-50px, -50px) scale(1.1); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex: 1;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-hover);
+        }
+
+        /* ==========================================
+           3. 头部导航 (Header)
+           ========================================== */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon-wrapper {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px var(--accent-glow);
+            color: #fff;
+            font-size: 1.3rem;
+            animation: pulse 3s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 8px 16px var(--accent-glow); }
+            100% { transform: scale(1.05); box-shadow: 0 12px 24px var(--accent-glow); }
+        }
+
+        .logo-text h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2px;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* 主题切换开关 */
+        .theme-toggle-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--card-border-hover);
+            transform: translateY(-2px);
+        }
+        .theme-toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        .theme-toggle-btn i {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        [data-theme="light"] .theme-toggle-btn .fa-sun {
+            transform: rotate(180deg) scale(0);
+            display: none;
+        }
+        [data-theme="dark"] .theme-toggle-btn .fa-moon {
+            transform: rotate(-180deg) scale(0);
+            display: none;
+        }
+
+        /* ==========================================
+           4. 主体栅格布局 (Grid Layout)
+           ========================================== */
+        .generator-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 968px) {
+            .generator-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 通用卡片容器 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--card-border-hover);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .card-title i {
+            color: var(--accent-color);
+        }
+
+        /* ==========================================
+           5. 输入控制栏 (Control Panel Elements)
+           ========================================== */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i.input-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .text-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 14px 16px 14px 44px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .text-input:focus {
+            border-color: var(--input-focus-border);
+            box-shadow: 0 0 0 4px var(--input-focus-shadow);
+        }
+
+        .text-input:focus + i.input-icon {
+            color: var(--accent-color);
+        }
+
+        /* 输入提示信息 */
+        .input-helper-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .input-helper-text span.accent {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* 规则开关列表 */
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .rule-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            padding: 14px 16px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .rule-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .rule-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rule-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(168, 85, 247, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="light"] .rule-icon-box {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .rule-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rule-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .rule-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--input-border);
+            transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background: var(--accent-gradient);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 0 2px var(--input-focus-shadow);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* 加号魔法子设置 */
+        .plus-settings {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .plus-settings-content {
+            min-height: 0;
+            transition: visibility 0.3s;
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--card-border);
+            margin-top: 4px;
+        }
+
+        .rule-item.active {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rule-item.active .plus-settings {
+            grid-template-rows: 1fr;
+        }
+
+        .rule-item.active .plus-settings-content {
+            visibility: visible;
+        }
+
+        .sub-input-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .sub-input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .select-style {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .select-style:focus {
+            border-color: var(--input-focus-border);
+        }
+
+        .small-input {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .small-input:focus {
+            border-color: var(--input-focus-border);
+        }
+
+        /* 数量选择 Segmented Control */
+        .qty-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .qty-selector {
+            display: flex;
+            background: var(--input-bg);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--input-border);
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .qty-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .qty-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .qty-btn.selected {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* 立即生成按钮 */
+        .btn-generate {
+            background: var(--accent-gradient);
+            border: none;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px var(--accent-glow);
+            background: var(--accent-gradient-hover);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        .btn-generate i.spinner {
+            display: none;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-generate.loading i.fa-magic {
+            display: none;
+        }
+
+        .btn-generate.loading i.spinner {
+            display: inline-block;
+        }
+
+        .btn-generate.loading {
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        /* ==========================================
+           6. 生成结果面板 (Result Panel)
+           ========================================== */
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 10px;
+            padding: 9px 12px 9px 34px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--input-focus-border);
+        }
+
+        .action-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 9px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--card-border-hover);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn.primary {
+            background: var(--accent-gradient);
+            border: none;
+            color: #fff;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 6px 16px var(--accent-glow);
+        }
+
+        /* 警告条 */
+        .warning-banner {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            color: var(--warning-text);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            line-height: 1.4;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            animation: fadeInUp 0.4s both;
+        }
+
+        .warning-banner i {
+            margin-top: 2px;
+            font-size: 0.95rem;
+        }
+
+        /* 结果列表容器 */
+        .results-container {
+            flex: 1;
+            min-height: 380px;
+            max-height: 480px;
+            overflow-y: auto;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            border-radius: 14px;
+            padding: 8px;
+            position: relative;
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.5;
+            animation: bounce 3s infinite alternate ease-in-out;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        .empty-state p {
+            font-size: 0.85rem;
+            max-width: 240px;
+            line-height: 1.5;
+        }
+
+        /* 列表项 */
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 14px;
+            border-radius: 10px;
+            gap: 10px;
+            animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item:hover {
+            border-color: var(--card-border-hover);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .alias-email-text {
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-all;
+            user-select: all;
+            flex: 1;
+        }
+
+        .item-copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .item-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-color);
+        }
+
+        .item-copy-btn.copied {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        /* ==========================================
+           7. 科普折叠面板 (FAQ Accordions)
+           ========================================== */
+        .faq-section {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .faq-section h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .faq-item:hover {
+            border-color: var(--card-border-hover);
+            transform: translateY(-2px);
+        }
+
+        .faq-question {
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-primary);
+        }
+
+        .faq-question i {
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            transition: transform 0.3s;
+        }
+
+        .faq-answer {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease;
+        }
+
+        .faq-answer-content {
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .faq-item.active {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-item.active .faq-answer {
+            grid-template-rows: 1fr;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-item code {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--accent-color);
+        }
+
+        /* ==========================================
+           8. 页脚与全局 Toast (Footer & Toast)
+           ========================================== */
+        footer {
+            margin-top: auto;
+            padding: 32px 0 24px 0;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-top: 1px solid var(--card-border);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--accent-color);
+        }
+
+        /* 顶部 Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: var(--toast-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 12px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(-20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .toast i {
+            color: var(--success-color);
+            font-size: 0.95rem;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .toast {
+                left: 24px;
+                right: 24px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景光晕 (Orbs) -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        
+        <!-- 头部 (Header) -->
+        <header>
+            <div class="logo-area">
+                <div class="logo-icon-wrapper">
+                    <i class="fa-solid fa-infinity"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Gmail 无限别名生成器</h1>
+                    <p>Gmail Infinite Alias Generator</p>
+                </div>
+            </div>
+            <!-- 主题切换按钮 -->
+            <button class="theme-toggle-btn" id="themeToggle" title="切换主题">
+                <i class="fa-solid fa-sun"></i>
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <!-- 主体栅格布局 -->
+        <div class="generator-grid">
+            
+            <!-- 左栏：控制配置面板 -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    生成配置
+                </div>
+
+                <!-- 邮箱输入框 -->
+                <div class="input-group">
+                    <label class="input-label" for="emailInput">基础 Gmail 地址</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="text-input" id="emailInput" value="example@gmail.com" placeholder="请输入你的 Gmail 邮箱" autocomplete="off">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                    </div>
+                    <div class="input-helper-text" id="emailParserInfo">
+                        检测到基础用户名: <span class="accent" id="parsedUsername">example</span>
+                    </div>
+                </div>
+
+                <!-- 生成规则组合 -->
+                <div class="input-group">
+                    <label class="input-label">生成规则组合 (自由组合)</label>
+                    <div class="rules-list">
+                        
+                        <!-- 规则1：点号变换 -->
+                        <div class="rule-item" id="ruleItemDot">
+                            <div class="rule-header-row" onclick="toggleSwitch('dotTrick')">
+                                <div class="rule-info">
+                                    <div class="rule-icon-box">
+                                        <i class="fa-solid fa-ellipsis"></i>
+                                    </div>
+                                    <div class="rule-meta">
+                                        <span class="rule-name">点号变换 (Dot Trick)</span>
+                                        <span class="rule-desc">在用户名中添加点号，例如 <code>e.x.a.mple</code></span>
+                                    </div>
+                                </div>
+                                <label class="switch" onclick="event.stopPropagation()">
+                                    <input type="checkbox" id="dotTrick" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 规则2：大小写变换 -->
+                        <div class="rule-item" id="ruleItemCase">
+                            <div class="rule-header-row" onclick="toggleSwitch('caseTrick')">
+                                <div class="rule-info">
+                                    <div class="rule-icon-box">
+                                        <i class="fa-solid fa-font"></i>
+                                    </div>
+                                    <div class="rule-meta">
+                                        <span class="rule-name">大小写变换 (Case Trick)</span>
+                                        <span class="rule-desc">改变英文字母的大小写，例如 <code>ExAmPle</code></span>
+                                    </div>
+                                </div>
+                                <label class="switch" onclick="event.stopPropagation()">
+                                    <input type="checkbox" id="caseTrick">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 规则3：加号魔法 -->
+                        <div class="rule-item" id="ruleItemPlus">
+                            <div class="rule-header-row" onclick="toggleSwitch('plusTrick')">
+                                <div class="rule-info">
+                                    <div class="rule-icon-box">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </div>
+                                    <div class="rule-meta">
+                                        <span class="rule-name">加号魔法 (Plus Trick)</span>
+                                        <span class="rule-desc">在用户名后添加 + 和特定后缀，例如 <code>example+dev</code></span>
+                                    </div>
+                                </div>
+                                <label class="switch" onclick="event.stopPropagation()">
+                                    <input type="checkbox" id="plusTrick">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <!-- 加号二级设置面板 -->
+                            <div class="plus-settings" onclick="event.stopPropagation()">
+                                <div class="plus-settings-content">
+                                    <div class="sub-input-row">
+                                        <select class="select-style" id="plusMode">
+                                            <option value="custom">自定义文本</option>
+                                            <option value="num">递增数字</option>
+                                            <option value="rand">随机字符</option>
+                                            <option value="date">当前日期</option>
+                                        </select>
+                                        <input type="text" class="small-input" id="plusCustomText" placeholder="例如: dev, shopping" value="dev">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 规则4：域名变换 -->
+                        <div class="rule-item" id="ruleItemDomain">
+                            <div class="rule-header-row" onclick="toggleSwitch('domainTrick')">
+                                <div class="rule-info">
+                                    <div class="rule-icon-box">
+                                        <i class="fa-solid fa-globe"></i>
+                                    </div>
+                                    <div class="rule-meta">
+                                        <span class="rule-name">域名变换 (Domain Trick)</span>
+                                        <span class="rule-desc">使用 <code>googlemail.com</code> 替换默认域名</span>
+                                    </div>
+                                </div>
+                                <label class="switch" onclick="event.stopPropagation()">
+                                    <input type="checkbox" id="domainTrick">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 生成数量 -->
+                <div class="qty-container">
+                    <label class="input-label">生成数量</label>
+                    <div class="qty-selector">
+                        <button class="qty-btn selected" data-qty="1">1</button>
+                        <button class="qty-btn" data-qty="5">5</button>
+                        <button class="qty-btn" data-qty="10">10</button>
+                        <button class="qty-btn" data-qty="20">20</button>
+                        <button class="qty-btn" data-qty="50">50</button>
+                        <button class="qty-btn" data-qty="100">100</button>
+                    </div>
+                </div>
+
+                <!-- 生成按钮 -->
+                <button class="btn-generate" id="btnGenerate">
+                    <i class="fa-solid fa-magic"></i>
+                    <i class="fa-solid fa-circle-notch spinner"></i>
+                    <span>立即生成别名</span>
+                </button>
+            </div>
+
+            <!-- 右栏：生成结果展示区 -->
+            <div class="card result-card">
+                <div class="result-panel">
+                    <div class="card-title">
+                        <i class="fa-solid fa-circle-check"></i>
+                        生成结果
+                    </div>
+
+                    <!-- 操作栏 -->
+                    <div class="panel-header" id="resultHeader" style="display: none;">
+                        <div class="panel-actions">
+                            <div class="search-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" class="search-input" id="searchFilter" placeholder="搜索过滤生成的别名...">
+                            </div>
+                            <button class="action-btn primary" id="btnCopyAll" title="一键复制全部邮箱">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>全部复制</span>
+                            </button>
+                            <button class="action-btn" id="btnExport" title="导出为TXT文件">
+                                <i class="fa-solid fa-download"></i>
+                                <span>导出</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 警告提示条 -->
+                    <div class="warning-banner" id="warningBanner" style="display: none;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <div>
+                            由于当前所选规则在去重后的排列组合总数受限，系统已输出最大可用不重复别名 <span id="warningMaxCount" style="font-weight:700;"></span> 个。建议启用“加号魔法”或输入更长的用户名。
+                        </div>
+                    </div>
+
+                    <!-- 结果列表包围容器 -->
+                    <div class="results-container">
+                        <!-- 空白状态展示 -->
+                        <div class="empty-state" id="emptyState">
+                            <i class="fa-regular fa-envelope-open empty-icon"></i>
+                            <div>
+                                <h3 style="font-size: 0.95rem; font-weight:700; color: var(--text-primary); margin-bottom: 6px;">等待生成</h3>
+                                <p>配置好上面的规则，点击“立即生成别名”按钮，批量结果将展示在这里。</p>
+                            </div>
+                        </div>
+
+                        <!-- 生成结果列表 -->
+                        <div class="results-list" id="resultsList"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 科普折叠面板区 -->
+        <section class="faq-section">
+            <h2>
+                <i class="fa-solid fa-circle-info"></i>
+                Gmail 别名原理科普
+            </h2>
+            <div class="faq-grid">
+                
+                <!-- FAQ 1: 点号变换 -->
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>点号变换 (Dot Trick) 是什么？</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Gmail 会忽略用户名中的所有点号。例如，发送给 <code>a.b.c@gmail.com</code> 和 <code>abc@gmail.com</code> 的邮件，都会投递到同一个收件箱中。这能产生大量的地址组合，非常适合用于网站注册防追踪。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 2: 加号魔法 -->
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>加号魔法 (Plus Trick) 的威力？</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            你可以使用加号 <code>+</code> 后接任意文本作为别名，如 <code>username+netflix@gmail.com</code>。Gmail 会将其准确投递给 <code>username@gmail.com</code>。利用该规则，你可以针对不同网站使用不同别名，配合过滤器实现极其强大的邮件分类与垃圾拦截。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 3: 大小写变换 -->
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>大小写变换对 Gmail 有效吗？</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            有效。Gmail 在识别用户名时不区分大小写，<code>eXaMpLe@gmail.com</code> 会完全投递给 <code>example@gmail.com</code>。许多第三方网站在验证邮箱时仅做基础文本匹配，这可以让同一个邮箱绕过单邮箱注册限制。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 4: 域名变换 -->
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>为什么 googlemail.com 也行？</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            在早期部分欧洲地区（如德国、英国），由于商标纠纷，Google 必须提供 <code>@googlemail.com</code> 后缀。事实上，所有发往 <code>@googlemail.com</code> 的邮件都直接在云端路由到对应的 <code>@gmail.com</code> 账户上，两者完全互通。
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 页脚 (Footer) -->
+        <footer>
+            <div>© 2026 Gmail 无限别名生成器. 本工具仅在本地浏览器中运行，绝对不会收集或传输您的邮箱数据。</div>
+            <div style="margin-top: 4px;">Gmail 是 Google LLC 的注册商标。本项目与其没有任何关联。</div>
+        </footer>
+
+    </div>
+
+    <!-- 全局 Toast 吐司提示 -->
+    <div class="toast" id="globalToast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMessage">复制成功！</span>
+    </div>
+
+    <!-- ==========================================
+       9. 核心 JavaScript 逻辑
+       ========================================== -->
+    <script>
+        // --- 状态与常量 ---
+        let currentTargetQty = 1;
+        let generatedAliases = []; // 当前生成出的完整别名列表
+
+        // --- DOM 元素引用 ---
+        const themeToggle = document.getElementById('themeToggle');
+        const emailInput = document.getElementById('emailInput');
+        const parsedUsernameSpan = document.getElementById('parsedUsername');
+        
+        const dotTrickCheckbox = document.getElementById('dotTrick');
+        const caseTrickCheckbox = document.getElementById('caseTrick');
+        const plusTrickCheckbox = document.getElementById('plusTrick');
+        const domainTrickCheckbox = document.getElementById('domainTrick');
+        
+        const plusModeSelect = document.getElementById('plusMode');
+        const plusCustomTextInput = document.getElementById('plusCustomText');
+        const ruleItemPlus = document.getElementById('ruleItemPlus');
+        
+        const btnGenerate = document.getElementById('btnGenerate');
+        const resultHeader = document.getElementById('resultHeader');
+        const warningBanner = document.getElementById('warningBanner');
+        const warningMaxCount = document.getElementById('warningMaxCount');
+        const emptyState = document.getElementById('emptyState');
+        const resultsList = document.getElementById('resultsList');
+        const searchFilter = document.getElementById('searchFilter');
+        
+        const btnCopyAll = document.getElementById('btnCopyAll');
+        const btnExport = document.getElementById('btnExport');
+        const globalToast = document.getElementById('globalToast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // --- 初始化设置与事件监听 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // 初始化检查加号选项卡样式
+            updatePlusTrickState();
+            // 解析默认邮箱
+            parseEmailInput();
+        });
+
+        // 监听输入框变化实时解析用户名
+        emailInput.addEventListener('input', parseEmailInput);
+
+        // 加号魔法开关状态变化
+        plusTrickCheckbox.addEventListener('change', updatePlusTrickState);
+        plusModeSelect.addEventListener('change', updatePlusModeState);
+
+        // 数量选择器点击处理
+        document.querySelectorAll('.qty-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('selected'));
+                e.target.classList.add('selected');
+                currentTargetQty = parseInt(e.target.getAttribute('data-qty'));
+            });
+        });
+
+        // 生成按钮点击
+        btnGenerate.addEventListener('click', generateAliasesHandler);
+
+        // 复制全部与导出
+        btnCopyAll.addEventListener('click', copyAllAliases);
+        btnExport.addEventListener('click', exportAliasesToTxt);
+
+        // 实时搜索过滤
+        searchFilter.addEventListener('input', filterResults);
+
+        // 主题切换事件
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            
+            // 切换主题时，微调主题按钮图标动画
+            const moonIcon = themeToggle.querySelector('.fa-moon');
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            
+            if (newTheme === 'light') {
+                sunIcon.style.transform = 'rotate(180deg) scale(0)';
+                moonIcon.style.transform = 'rotate(0deg) scale(1)';
+            } else {
+                sunIcon.style.transform = 'rotate(0deg) scale(1)';
+                moonIcon.style.transform = 'rotate(-180deg) scale(0)';
+            }
+        });
+
+        // --- 交互逻辑封装 ---
+
+        // 用 JavaScript 包装的点击行即可切换 Switch
+        function toggleSwitch(id) {
+            const checkbox = document.getElementById(id);
+            checkbox.checked = !checkbox.checked;
+            // 手动触发 change 事件
+            checkbox.dispatchEvent(new Event('change'));
+        }
+
+        // 加号魔法子面板的折叠展示与样式变更
+        function updatePlusTrickState() {
+            if (plusTrickCheckbox.checked) {
+                ruleItemPlus.classList.add('active');
+            } else {
+                ruleItemPlus.classList.remove('active');
+            }
+            updatePlusModeState();
+        }
+
+        // 根据选择的加号模式显示或隐藏自定义后缀输入框
+        function updatePlusModeState() {
+            if (plusTrickCheckbox.checked && plusModeSelect.value === 'custom') {
+                plusCustomTextInput.style.display = 'block';
+            } else {
+                plusCustomTextInput.style.display = 'none';
+            }
+        }
+
+        // 手风琴折叠面板交互
+        function toggleFaq(element) {
+            const isActive = element.classList.contains('active');
+            // 关闭其他所有已展开的
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // 切换当前的
+            if (!isActive) {
+                element.classList.add('active');
+            }
+        }
+
+        // 显示全局 Toast 气泡
+        function showToast(message, isSuccess = true) {
+            toastMessage.textContent = message;
+            const icon = globalToast.querySelector('i');
+            if (isSuccess) {
+                icon.className = 'fa-solid fa-circle-check';
+                icon.style.color = 'var(--success-color)';
+            } else {
+                icon.className = 'fa-solid fa-circle-exclamation';
+                icon.style.color = 'var(--warning-text)';
+            }
+            
+            globalToast.classList.add('show');
+            setTimeout(() => {
+                globalToast.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- 核心算法与邮箱解析 ---
+
+        // 提取规范化的用户名和原始输入域名
+        function parseEmailInput() {
+            const rawVal = emailInput.value.trim();
+            if (!rawVal) {
+                parsedUsernameSpan.textContent = '---';
+                return null;
+            }
+
+            // 识别完整的邮箱格式
+            const emailRegex = /^([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;
+            const match = rawVal.match(emailRegex);
+
+            let username = '';
+            let domain = 'gmail.com';
+
+            if (match) {
+                username = match[1];
+                domain = match[2];
+            } else {
+                // 如果用户只输入了用户名，把这部分作为用户名，域名默认 gmail.com
+                username = rawVal;
+            }
+
+            // 智能过滤：剥离现有的点号和加号，提取真正的基础用户名
+            // 因为 Gmail 忽略点号，忽略加号及其后面的字符。
+            // 举例：my.name+test -> myname
+            let cleanUsername = username.split('+')[0].replace(/\./g, '');
+            
+            if (cleanUsername) {
+                parsedUsernameSpan.textContent = cleanUsername;
+                return {
+                    originalUsername: username,
+                    cleanUsername: cleanUsername,
+                    originalDomain: domain
+                };
+            } else {
+                parsedUsernameSpan.textContent = '---';
+                return null;
+            }
+        }
+
+        // 执行生成动作的主函数
+        function generateAliasesHandler() {
+            const parsed = parseEmailInput();
+            if (!parsed) {
+                showToast('请输入有效的 Gmail 地址或用户名', false);
+                return;
+            }
+
+            // 显示 Loading 动效，让页面更有反馈感
+            btnGenerate.classList.add('loading');
+            btnGenerate.querySelector('span').textContent = '正在计算组合...';
+
+            setTimeout(() => {
+                try {
+                    executeGeneration(parsed);
+                } catch (e) {
+                    console.error('别名生成出错：', e);
+                    showToast('生成失败，请检查配置', false);
+                } finally {
+                    btnGenerate.classList.remove('loading');
+                    btnGenerate.querySelector('span').textContent = '立即生成别名';
+                }
+            }, 400); // 400ms 的视觉缓冲延迟，增强交互的高级感
+        }
+
+        // 核心生成与去重逻辑
+        function executeGeneration(parsed) {
+            const cleanUser = parsed.cleanUsername;
+            const targetQty = currentTargetQty;
+
+            const useDot = dotTrickCheckbox.checked;
+            const useCase = caseTrickCheckbox.checked;
+            const usePlus = plusTrickCheckbox.checked;
+            const useDomain = domainTrickCheckbox.checked;
+
+            const plusMode = plusModeSelect.value;
+            const plusCustomText = plusCustomTextInput.value.trim();
+
+            const finalDomain = useDomain ? 'googlemail.com' : 'gmail.com';
+
+            // 存储去重后的别名结果
+            const aliasSet = new Set();
+
+            // 1. 点号变换 (Dot Trick) 的前置准备
+            // 若 CleanUsername 长度为 N，间隙有 N-1 个。
+            const N = cleanUser.length;
+            const gapCount = N - 1;
+            const maxDotCombinations = gapCount > 0 ? Math.pow(2, gapCount) : 1;
+
+            // 算法分支：如果空间小且启用点号，先生成所有可能的点号组合以保底；如果空间极大或未启用，则动态计算
+            let allDotVariations = [];
+            if (useDot && gapCount > 0) {
+                // 如果间隙较小 (<= 11，即组合数 <= 2048)，直接穷举所有可能的点号分布
+                if (gapCount <= 11) {
+                    for (let i = 0; i < maxDotCombinations; i++) {
+                        let dotted = '';
+                        for (let j = 0; j < N; j++) {
+                            dotted += cleanUser[j];
+                            // 通过数字 i 的二进制位来决定是否在此处插入点
+                            if (j < gapCount && ((i >> j) & 1)) {
+                                dotted += '.';
+                            }
+                        }
+                        allDotVariations.push(dotted);
+                    }
+                    // 洗牌打乱以获得随机效果
+                    shuffleArray(allDotVariations);
+                }
+            }
+
+            // 安全边界设计：设定最大循环尝试次数，防止在组合数耗尽时陷入死循环
+            let attempts = 0;
+            const maxAttempts = targetQty * 50;
+
+            // 递增索引计数器，用于“递增数字”和当组合受限时的兜底递增
+            let incrementCounter = 1;
+
+            while (aliasSet.size < targetQty && attempts < maxAttempts) {
+                attempts++;
+
+                // Step A: 选定经过点号处理的用户名
+                let dottedUser = cleanUser;
+                if (useDot && gapCount > 0) {
+                    if (gapCount <= 11) {
+                        // 从穷举洗牌后的列表里循环选取
+                        const idx = attempts % allDotVariations.length;
+                        dottedUser = allDotVariations[idx];
+                    } else {
+                        // 间隙大时，随机位掩码插入
+                        let temp = '';
+                        for (let j = 0; j < N; j++) {
+                            temp += cleanUser[j];
+                            if (j < gapCount && Math.random() < 0.5) {
+                                temp += '.';
+                            }
+                        }
+                        dottedUser = temp;
+                    }
+                }
+
+                // Step B: 大小写变换 (Case Trick)
+                let casedUser = dottedUser;
+                if (useCase) {
+                    let temp = '';
+                    for (let j = 0; j < dottedUser.length; j++) {
+                        const char = dottedUser[j];
+                        // 仅对英文字母部分做随机大小写变化
+                        if (/[a-zA-Z]/.test(char)) {
+                            temp += Math.random() < 0.5 ? char.toUpperCase() : char.toLowerCase();
+                        } else {
+                            temp += char;
+                        }
+                    }
+                    casedUser = temp;
+                }
+
+                // Step C: 加号魔法 (Plus Trick)
+                let finalUser = casedUser;
+                if (usePlus) {
+                    let suffix = '';
+                    switch (plusMode) {
+                        case 'custom':
+                            // 如果用户要求生成多个，但并未启用任何其他能产生差异的开关，
+                            // 为防止自定义后缀导致去重后始终只有1个，我们在第2个及以后的元素自动附加数字
+                            if (targetQty > 1 && aliasSet.size > 0 && !useDot && !useCase) {
+                                suffix = `+${plusCustomText || 'dev'}${incrementCounter}`;
+                                incrementCounter++;
+                            } else {
+                                suffix = `+${plusCustomText || 'dev'}`;
+                            }
+                            break;
+                        case 'num':
+                            suffix = `+${incrementCounter}`;
+                            incrementCounter++;
+                            break;
+                        case 'rand':
+                            suffix = `+${generateRandomString(4)}`;
+                            break;
+                        case 'date':
+                            const todayStr = getTodayString();
+                            if (targetQty > 1 && aliasSet.size > 0) {
+                                suffix = `+${todayStr}-${incrementCounter}`;
+                                incrementCounter++;
+                            } else {
+                                suffix = `+${todayStr}`;
+                            }
+                            break;
+                    }
+                    finalUser = finalUser + suffix;
+                }
+
+                // Step D: 拼接域名
+                const fullAlias = `${finalUser}@${finalDomain}`;
+
+                // 若之前已经生成过该别名，且我们没有开启加号随机/数字模式，且已经穷举了点号/大小写的可能：
+                // 为确保一定能生成足够数量的不重复别名，若重复了且实在无法突破，我们最终会在这里触发兜底自增，
+                // 但如果允许不满足数量直接显示警告，我们就正常跳过
+                if (aliasSet.has(fullAlias)) {
+                    continue;
+                }
+
+                aliasSet.add(fullAlias);
+            }
+
+            // 转换结果
+            generatedAliases = Array.from(aliasSet);
+
+            // 2. 检查是否不满足生成期望数量 (触发警告提示)
+            if (generatedAliases.length < targetQty) {
+                warningMaxCount.textContent = generatedAliases.length;
+                warningBanner.style.display = 'flex';
+            } else {
+                warningBanner.style.display = 'none';
+            }
+
+            // 3. 渲染结果
+            renderAliases();
+        }
+
+        // 渲染别名到结果列表
+        function renderAliases() {
+            // 清空列表
+            resultsList.innerHTML = '';
+            searchFilter.value = ''; // 清空搜索框
+
+            if (generatedAliases.length === 0) {
+                emptyState.style.display = 'flex';
+                resultHeader.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            resultHeader.style.display = 'flex';
+
+            // 动态逐行飞入动画
+            generatedAliases.forEach((alias, index) => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.style.animationDelay = `${index * 12}ms`; 
+
+                item.innerHTML = `
+                    <span class="alias-email-text">${alias}</span>
+                    <button class="item-copy-btn" title="复制此邮箱" onclick="copySingleAlias('${alias}', this)">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                `;
+                resultsList.appendChild(item);
+            });
+        }
+
+        // 结果搜索与过滤
+        function filterResults() {
+            const query = searchFilter.value.trim().toLowerCase();
+            const items = resultsList.querySelectorAll('.result-item');
+            
+            items.forEach(item => {
+                const text = item.querySelector('.alias-email-text').textContent.toLowerCase();
+                if (text.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // --- 功能函数 (复制 & 导出) ---
+
+        // 复制单个别名
+        function copySingleAlias(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                // 更换图标为对勾，并加 success 样式
+                const icon = btnElement.querySelector('i');
+                icon.className = 'fa-solid fa-check';
+                btnElement.classList.add('copied');
+                
+                showToast(`已复制: ${text}`);
+
+                // 1.5s 后还原
+                setTimeout(() => {
+                    icon.className = 'fa-regular fa-copy';
+                    btnElement.classList.remove('copied');
+                }, 1500);
+            }).catch(err => {
+                console.error('复制出错：', err);
+                showToast('复制失败，请手动选定复制', false);
+            });
+        }
+
+        // 复制全部别名
+        function copyAllAliases() {
+            // 只复制当前通过搜索可见的项
+            const visibleItems = Array.from(resultsList.querySelectorAll('.result-item'))
+                .filter(item => item.style.display !== 'none')
+                .map(item => item.querySelector('.alias-email-text').textContent);
+
+            if (visibleItems.length === 0) {
+                showToast('没有可复制的别名', false);
+                return;
+            }
+
+            const textToCopy = visibleItems.join('\n');
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast(`成功复制全部 ${visibleItems.length} 个邮箱别名！`);
+            }).catch(err => {
+                console.error('全部复制出错：', err);
+                showToast('复制失败', false);
+            });
+        }
+
+        // 导出为 TXT 文件
+        function exportAliasesToTxt() {
+            const visibleItems = Array.from(resultsList.querySelectorAll('.result-item'))
+                .filter(item => item.style.display !== 'none')
+                .map(item => item.querySelector('.alias-email-text').textContent);
+
+            if (visibleItems.length === 0) {
+                showToast('没有可导出的别名', false);
+                return;
+            }
+
+            const parsed = parseEmailInput();
+            const userTag = parsed ? parsed.cleanUsername : 'alias';
+            
+            const fileContent = visibleItems.join('\r\n');
+            const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gmail_aliases_${userTag}_${visibleItems.length}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast(`已成功导出 ${visibleItems.length} 个别名至 TXT 文件`);
+        }
+
+        // --- 辅助工具函数 ---
+
+        // 数组随机洗牌 (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 生成随机字符串
+        function generateRandomString(length) {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // 获取格式化后的日期 YYYYMMDD
+        function getTodayString() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}${mm}${dd}`;
+        }
+    </script>
+</body>
+</html>
