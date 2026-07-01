@@ -58,6 +58,6 @@
 ## 🚀 快速开始
 
 本项目为**零构建步骤**的纯静态网页：
-1. 下载或复制代码库中的 [index.html]。
+1. 下载或复制代码库中的 [index.html](https://github.com/ReGan520/gmai-alias-generator/blob/main/index.html)。
 2. 在您的电脑上**直接双击打开** `index.html`。
 3. 即可在本地浏览器中直接使用所有功能，完全离线可用！
